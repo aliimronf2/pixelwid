@@ -24,6 +24,7 @@ struct PixelWid {
     save_path: Option<PathBuf>,
     status: String,
     status_is_error: bool,
+    monitor_size: Option<egui::Vec2>,
 }
 
 impl PixelWid {
@@ -63,6 +64,7 @@ impl PixelWid {
             save_path,
             status,
             status_is_error,
+            monitor_size: None,
         }
     }
 
@@ -109,6 +111,22 @@ impl PixelWid {
 impl eframe::App for PixelWid {
     fn update(&mut self, context: &egui::Context, _frame: &mut eframe::Frame) {
         context.request_repaint_after(Duration::from_secs(1));
+        let monitor_size = context
+            .input(|input| input.viewport().monitor_size)
+            .filter(|size| size.is_finite() && size.x > 0.0 && size.y > 0.0);
+        if monitor_size != self.monitor_size {
+            self.monitor_size = monitor_size;
+            if let Some(monitor_size) = monitor_size {
+                // Leave room for the native title bar and window borders.
+                let max_size = egui::vec2(
+                    (monitor_size.x - 32.0).max(1.0),
+                    (monitor_size.y - 64.0).max(1.0),
+                );
+                let min_size = egui::vec2(340.0, 440.0).min(max_size);
+                context.send_viewport_cmd(egui::ViewportCommand::MaxInnerSize(max_size));
+                context.send_viewport_cmd(egui::ViewportCommand::MinInnerSize(min_size));
+            }
+        }
         context.set_visuals(egui::Visuals::dark());
         context.style_mut(|style| {
             style.override_font_id = Some(FontId::monospace(14.0));
