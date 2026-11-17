@@ -19,9 +19,9 @@ cargo build --release --target x86_64-pc-windows-msvc
 The MSVC build statically links the C runtime and does not require MinGW on the
 build or target machine. You can also download the `pixelwid-windows-x64`
 artifact from the `Build Windows executable` GitHub Actions workflow. The app
-opens as a resizable, always-on-top window and appears on the taskbar. Tasks
-are stored in the operating system's local data directory under
-`PixelWid/tasks.json`.
+opens as a resizable, always-on-top window, appears on the taskbar, and adjusts
+its size limit to the current monitor. Tasks are stored in the operating
+system's local data directory under `PixelWid/tasks.json`.
 
 ## Graphical session required
 

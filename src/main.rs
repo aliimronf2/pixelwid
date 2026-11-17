@@ -111,9 +111,15 @@ impl PixelWid {
 impl eframe::App for PixelWid {
     fn update(&mut self, context: &egui::Context, _frame: &mut eframe::Frame) {
         context.request_repaint_after(Duration::from_secs(1));
-        let monitor_size = context
-            .input(|input| input.viewport().monitor_size)
-            .filter(|size| size.is_finite() && size.x > 0.0 && size.y > 0.0);
+        let (monitor_size, window_size) = context.input(|input| {
+            let viewport = input.viewport();
+            (
+                viewport.monitor_size,
+                viewport.inner_rect.map(|rect| rect.size()),
+            )
+        });
+        let monitor_size =
+            monitor_size.filter(|size| size.is_finite() && size.x > 0.0 && size.y > 0.0);
         if monitor_size != self.monitor_size {
             self.monitor_size = monitor_size;
             if let Some(monitor_size) = monitor_size {
@@ -125,6 +131,9 @@ impl eframe::App for PixelWid {
                 let min_size = egui::vec2(340.0, 440.0).min(max_size);
                 context.send_viewport_cmd(egui::ViewportCommand::MaxInnerSize(max_size));
                 context.send_viewport_cmd(egui::ViewportCommand::MinInnerSize(min_size));
+                if window_size.is_some_and(|size| size.x > max_size.x || size.y > max_size.y) {
+                    context.send_viewport_cmd(egui::ViewportCommand::InnerSize(max_size));
+                }
             }
         }
         context.set_visuals(egui::Visuals::dark());
