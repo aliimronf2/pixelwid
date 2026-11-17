@@ -1,9 +1,9 @@
 # PixelWid
 
 A small, always-on-top desktop widget with a live clock, date, and locally
-saved to-do list. Its borderless window can be dragged by the `[ PIXELWID // DESK ]`
-header. The compact terminal-inspired colors and monospace layout give it a
-pixel-art feel without requiring image assets.
+saved to-do list. Its native title bar supports dragging and resizing. The
+compact terminal-inspired colors and monospace layout give it a pixel-art feel
+without requiring image assets.
 
 ## Run on Windows 10/11 (x64)
 

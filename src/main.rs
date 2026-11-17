@@ -1,7 +1,7 @@
 use std::{fs, path::PathBuf, time::Duration};
 
 use chrono::Local;
-use eframe::egui::{self, Align, Color32, FontId, Layout, RichText, Sense, Stroke};
+use eframe::egui::{self, Align, Color32, FontId, Layout, RichText, Stroke};
 use serde::{Deserialize, Serialize};
 
 const BACKGROUND: Color32 = Color32::from_rgb(24, 24, 24);
@@ -133,32 +133,7 @@ impl eframe::App for PixelWid {
                     .stroke(Stroke::new(1.0_f32, EDGE)),
             )
             .show(context, |ui| {
-                ui.horizontal(|ui| {
-                    let title = ui.add(
-                        egui::Label::new(
-                            RichText::new("[ PIXELWID // DESK ]").color(ACCENT).strong(),
-                        )
-                        .sense(Sense::drag()),
-                    );
-                    let drag_width = (ui.available_width() - 36.0).max(0.0);
-                    let drag_area = ui.add_sized(
-                        [drag_width, 32.0],
-                        egui::Label::new("").sense(Sense::drag()),
-                    );
-                    if title.dragged() || drag_area.dragged() {
-                        context.send_viewport_cmd(egui::ViewportCommand::StartDrag);
-                    }
-
-                    ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                        if ui
-                            .button(RichText::new("X").color(MUTED))
-                            .on_hover_text("Close widget")
-                            .clicked()
-                        {
-                            context.send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
-                    });
-                });
+                ui.label(RichText::new("[ PIXELWID // DESK ]").color(ACCENT).strong());
                 ui.add_space(8.0);
                 ui.separator();
                 ui.add_space(12.0);
@@ -314,7 +289,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .with_inner_size([400.0, 600.0])
             .with_min_inner_size([340.0, 440.0])
             .with_position([48.0, 72.0])
-            .with_decorations(false)
+            .with_decorations(true)
             .with_always_on_top()
             .with_taskbar(true)
             .with_resizable(true),
