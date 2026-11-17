@@ -111,7 +111,7 @@ impl eframe::App for PixelWid {
         context.request_repaint_after(Duration::from_secs(1));
         context.set_visuals(egui::Visuals::dark());
         context.style_mut(|style| {
-            style.override_font_id = Some(FontId::monospace(13.0));
+            style.override_font_id = Some(FontId::monospace(14.0));
             style.visuals.override_text_color = Some(INK);
             style.visuals.window_fill = BACKGROUND;
             style.visuals.panel_fill = BACKGROUND;
@@ -129,16 +129,23 @@ impl eframe::App for PixelWid {
             .frame(
                 egui::Frame::none()
                     .fill(BACKGROUND)
+                    .inner_margin(egui::Margin::same(16.0))
                     .stroke(Stroke::new(1.0_f32, EDGE)),
             )
             .show(context, |ui| {
-                ui.add_space(10.0);
                 ui.horizontal(|ui| {
-                    let title =
-                        ui.label(RichText::new("[ PIXELWID // DESK ]").color(ACCENT).strong());
-                    let drag_area =
-                        ui.interact(title.rect, ui.id().with("window_drag"), Sense::drag());
-                    if drag_area.dragged() {
+                    let title = ui.add(
+                        egui::Label::new(
+                            RichText::new("[ PIXELWID // DESK ]").color(ACCENT).strong(),
+                        )
+                        .sense(Sense::drag()),
+                    );
+                    let drag_width = (ui.available_width() - 36.0).max(0.0);
+                    let drag_area = ui.add_sized(
+                        [drag_width, 32.0],
+                        egui::Label::new("").sense(Sense::drag()),
+                    );
+                    if title.dragged() || drag_area.dragged() {
                         context.send_viewport_cmd(egui::ViewportCommand::StartDrag);
                     }
 
@@ -152,14 +159,14 @@ impl eframe::App for PixelWid {
                         }
                     });
                 });
-                ui.add_space(10.0);
+                ui.add_space(8.0);
                 ui.separator();
                 ui.add_space(12.0);
 
                 ui.label(RichText::new("SYSTEM TIME").color(MUTED).small());
                 ui.add_space(2.0);
                 ui.label(
-                    RichText::new(Local::now().format("%H:%M:%S").to_string())
+                    RichText::new(Local::now().format("%H:%M").to_string())
                         .font(FontId::monospace(38.0))
                         .color(INK)
                         .strong(),
@@ -192,10 +199,11 @@ impl eframe::App for PixelWid {
                 });
                 ui.add_space(8.0);
 
+                let max_task_height = (ui.available_height() - 120.0).clamp(80.0, 320.0);
                 let mut changed = false;
                 let mut remove_index = None;
                 egui::ScrollArea::vertical()
-                    .max_height(205.0)
+                    .max_height(max_task_height)
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
                         if self.tasks.is_empty() {
@@ -303,11 +311,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_title("PixelWid")
-            .with_inner_size([360.0, 530.0])
-            .with_min_inner_size([320.0, 440.0])
+            .with_inner_size([400.0, 600.0])
+            .with_min_inner_size([340.0, 440.0])
             .with_position([48.0, 72.0])
             .with_decorations(false)
             .with_always_on_top()
+            .with_taskbar(true)
             .with_resizable(true),
         ..Default::default()
     };

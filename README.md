@@ -5,17 +5,23 @@ saved to-do list. Its borderless window can be dragged by the `[ PIXELWID // DES
 header. The compact terminal-inspired colors and monospace layout give it a
 pixel-art feel without requiring image assets.
 
-## Run on Windows 11
+## Run on Windows 10/11 (x64)
 
 Install the stable Rust toolchain and the Visual C++ build tools/Windows SDK,
-then run this from PowerShell in the project directory:
+then build the standalone executable from PowerShell in the project directory:
 
 ```powershell
-cargo run --release
+$env:RUSTFLAGS = "-C target-feature=+crt-static"
+cargo build --release --target x86_64-pc-windows-msvc
+.\target\x86_64-pc-windows-msvc\release\pixelwid.exe
 ```
 
-The app opens as a native, always-on-top desktop window. Tasks are stored in the
-operating system's local data directory under `PixelWid/tasks.json`.
+The MSVC build statically links the C runtime and does not require MinGW on the
+build or target machine. You can also download the `pixelwid-windows-x64`
+artifact from the `Build Windows executable` GitHub Actions workflow. The app
+opens as a resizable, always-on-top window and appears on the taskbar. Tasks
+are stored in the operating system's local data directory under
+`PixelWid/tasks.json`.
 
 ## Graphical session required
 
