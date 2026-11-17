@@ -222,8 +222,8 @@ impl eframe::App for PixelWid {
                             .to_string()
                             .to_uppercase(),
                     )
-                    .color(ACCENT)
-                    .small(),
+                    .font(FontId::monospace(18.0))
+                    .color(ACCENT),
                 );
                 ui.add_space(10.0);
                 ui.horizontal(|ui| {
