@@ -1,9 +1,10 @@
 # PixelWid
 
-A small, always-on-top desktop widget with a live clock, date, and locally
-saved to-do list. Its native title bar supports dragging and resizing. The
-compact terminal-inspired colors and monospace layout give it a pixel-art feel
-without requiring image assets.
+A small, always-on-top desktop widget with a live clock, date, CPU and memory
+usage, and a locally saved to-do list. Drag the native title bar or the
+`SYSTEM TIME` heading to move it; use the native window borders to resize it.
+The compact terminal-inspired colors and monospace layout give it a pixel-art
+feel without requiring image assets.
 
 ## Run on Windows 10/11 (x64)
 
@@ -20,8 +21,9 @@ The MSVC build statically links the C runtime and does not require MinGW on the
 build or target machine. You can also download the `pixelwid-windows-x64`
 artifact from the `Build Windows executable` GitHub Actions workflow. The app
 opens as a resizable, always-on-top window, appears on the taskbar, and adjusts
-its size limit to the current monitor. Tasks are stored in the operating
-system's local data directory under `PixelWid/tasks.json`.
+its size limit to the current monitor. CPU and RAM readings refresh once per
+second. Tasks are stored in the operating system's local data directory under
+`PixelWid/tasks.json`.
 
 ## Graphical session required
 

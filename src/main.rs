@@ -1,8 +1,13 @@
-use std::{fs, path::PathBuf, time::Duration};
+use std::{
+    fs,
+    path::PathBuf,
+    time::{Duration, Instant},
+};
 
 use chrono::Local;
-use eframe::egui::{self, Align, Color32, FontId, Layout, RichText, Stroke};
+use eframe::egui::{self, Align, Color32, FontId, Layout, RichText, Sense, Stroke};
 use serde::{Deserialize, Serialize};
+use sysinfo::System;
 
 const BACKGROUND: Color32 = Color32::from_rgb(24, 24, 24);
 const SURFACE: Color32 = Color32::from_rgb(32, 32, 32);
@@ -25,6 +30,10 @@ struct PixelWid {
     status: String,
     status_is_error: bool,
     monitor_size: Option<egui::Vec2>,
+    system: Option<System>,
+    cpu_usage: Option<f32>,
+    metrics_error: Option<String>,
+    last_metrics_refresh: Instant,
 }
 
 impl PixelWid {
@@ -57,6 +66,17 @@ impl PixelWid {
                 true,
             ),
         };
+        let (system, metrics_error) = match System::new() {
+            Ok(mut system) => {
+                system.refresh_cpu_usage();
+                system.refresh_memory();
+                (Some(system), None)
+            }
+            Err(error) => (
+                None,
+                Some(format!("Could not read system metrics: {error}")),
+            ),
+        };
 
         Self {
             tasks,
@@ -65,6 +85,10 @@ impl PixelWid {
             status,
             status_is_error,
             monitor_size: None,
+            system,
+            cpu_usage: None,
+            metrics_error,
+            last_metrics_refresh: Instant::now(),
         }
     }
 
@@ -111,6 +135,15 @@ impl PixelWid {
 impl eframe::App for PixelWid {
     fn update(&mut self, context: &egui::Context, _frame: &mut eframe::Frame) {
         context.request_repaint_after(Duration::from_secs(1));
+        if self.last_metrics_refresh.elapsed() >= Duration::from_secs(1) {
+            if let Some(system) = &mut self.system {
+                system.refresh_cpu_usage();
+                system.refresh_memory();
+                self.cpu_usage = Some(system.global_cpu_usage());
+            }
+            self.last_metrics_refresh = Instant::now();
+        }
+
         let (monitor_size, window_size) = context.input(|input| {
             let viewport = input.viewport();
             (
@@ -138,7 +171,7 @@ impl eframe::App for PixelWid {
         }
         context.set_visuals(egui::Visuals::dark());
         context.style_mut(|style| {
-            style.override_font_id = Some(FontId::monospace(14.0));
+            style.override_font_id = Some(FontId::monospace(16.0));
             style.visuals.override_text_color = Some(INK);
             style.visuals.window_fill = BACKGROUND;
             style.visuals.panel_fill = BACKGROUND;
@@ -160,16 +193,25 @@ impl eframe::App for PixelWid {
                     .stroke(Stroke::new(1.0_f32, EDGE)),
             )
             .show(context, |ui| {
-                ui.label(RichText::new("[ PIXELWID // DESK ]").color(ACCENT).strong());
-                ui.add_space(8.0);
-                ui.separator();
-                ui.add_space(12.0);
-
-                ui.label(RichText::new("SYSTEM TIME").color(MUTED).small());
+                let drag_header = ui.add_sized(
+                    [ui.available_width(), 28.0],
+                    egui::Label::new(RichText::new("SYSTEM TIME").color(MUTED).small())
+                        .sense(Sense::drag()),
+                );
+                if drag_header.hovered() {
+                    context.set_cursor_icon(if drag_header.dragged() {
+                        egui::CursorIcon::Grabbing
+                    } else {
+                        egui::CursorIcon::Grab
+                    });
+                }
+                if drag_header.drag_started() {
+                    context.send_viewport_cmd(egui::ViewportCommand::StartDrag);
+                }
                 ui.add_space(2.0);
                 ui.label(
                     RichText::new(Local::now().format("%H:%M").to_string())
-                        .font(FontId::monospace(38.0))
+                        .font(FontId::monospace(44.0))
                         .color(INK)
                         .strong(),
                 );
@@ -183,6 +225,30 @@ impl eframe::App for PixelWid {
                     .color(ACCENT)
                     .small(),
                 );
+                ui.add_space(10.0);
+                ui.horizontal(|ui| {
+                    let cpu = self.cpu_usage.map_or_else(
+                        || "CPU --.-%".to_owned(),
+                        |usage| format!("CPU {usage:4.1}%"),
+                    );
+                    ui.label(RichText::new(cpu).color(ACCENT));
+                    ui.separator();
+                    let memory = self.system.as_ref().map_or_else(
+                        || "RAM --.-/--.- GB".to_owned(),
+                        |system| {
+                            const GIB: f64 = 1_073_741_824.0;
+                            format!(
+                                "RAM {:.1}/{:.1} GB",
+                                system.used_memory() as f64 / GIB,
+                                system.total_memory() as f64 / GIB,
+                            )
+                        },
+                    );
+                    ui.label(RichText::new(memory).color(GREEN));
+                });
+                if let Some(error) = &self.metrics_error {
+                    ui.label(RichText::new(error).color(ACCENT).small());
+                }
 
                 ui.add_space(18.0);
                 ui.separator();
